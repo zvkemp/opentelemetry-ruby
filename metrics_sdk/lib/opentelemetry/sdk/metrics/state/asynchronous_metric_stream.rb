@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+require 'monitor'
+
 module OpenTelemetry
   module SDK
     module Metrics
@@ -40,16 +42,16 @@ module OpenTelemetry
             @attributes = attributes
             @data_points = {}
 
-            @mutex = Mutex.new
+            @mutex = Monitor.new
           end
 
           # When collect, if there are asynchronous SDK Instruments involved, their callback functions will be triggered.
           # Related spec: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#collect
           # invoke_callback will update the data_points in aggregation
           def collect(start_time, end_time)
-            invoke_callback(@timeout, @attributes)
-
             @mutex.synchronize do
+              invoke_callback(@timeout, @attributes)
+
               MetricData.new(
                 @name,
                 @description,
@@ -69,8 +71,12 @@ module OpenTelemetry
             @mutex.synchronize do
               Timeout.timeout(timeout || 30) do
                 @callback.each do |cb|
-                  value = cb.call
-                  @aggregation.update(value, attributes, @data_points)
+                  observations = Observations.new
+                  cb.call(observations)
+
+                  observations.data.each do |value, observed_attributes|
+                    @aggregation.update(value, attributes.merge(observed_attributes), @data_points)
+                  end
                 end
               end
             end

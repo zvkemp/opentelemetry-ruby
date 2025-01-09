@@ -65,11 +65,11 @@ describe OpenTelemetry::SDK::Metrics::Meter do
       end
 
       it 'create callback with multi asychronous instrument' do
-        callback_first = proc { 10 }
+        callback_first = proc { |obs| obs.observe(10) }
         counter_first  = meter.create_observable_counter('counter_first', unit: 'smidgen', description: '', callback: callback_first)
         counter_second = meter.create_observable_counter('counter_second', unit: 'smidgen', description: '', callback: callback_first)
 
-        callback_second = proc { 20 }
+        callback_second = proc { |obs| obs.observe(20) }
         meter.register_callback([counter_first, counter_second], callback_second)
 
         _(counter_first.instance_variable_get(:@callbacks).size).must_equal 2
@@ -96,11 +96,11 @@ describe OpenTelemetry::SDK::Metrics::Meter do
       end
 
       it 'remove callback with multi asychronous instrument' do
-        callback_first = proc { 10 }
+        callback_first = proc { |obs| obs.observe(10) }
         counter_first  = meter.create_observable_counter('counter_first', unit: 'smidgen', description: '', callback: callback_first)
         counter_second = meter.create_observable_counter('counter_second', unit: 'smidgen', description: '', callback: callback_first)
 
-        callback_second = proc { 20 }
+        callback_second = proc { |obs| obs.observe(20) }
         meter.register_callback([counter_first, counter_second], callback_second)
 
         _(counter_first.instance_variable_get(:@callbacks).size).must_equal 2

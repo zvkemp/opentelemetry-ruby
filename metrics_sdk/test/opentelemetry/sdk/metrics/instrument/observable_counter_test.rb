@@ -17,7 +17,7 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableCounter do
   end
 
   it 'counts without observe' do
-    callback = proc { 10 }
+    callback = proc { |obs| obs.observe(10) }
     meter.create_observable_counter('counter', unit: 'smidgen', description: 'a small amount of something', callback: callback)
 
     metric_exporter.pull
@@ -34,7 +34,7 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableCounter do
   end
 
   it 'counts with set timeout and attributes' do
-    callback = proc { 10 }
+    callback = proc { |obs| obs.observe(10) }
     observable_counter = meter.create_observable_counter('counter', unit: 'smidgen', description: 'a small amount of something', callback: callback)
     observable_counter.add_attributes({ 'foo' => 'bar' })
     observable_counter.timeout(10)
@@ -53,7 +53,7 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableCounter do
   end
 
   it 'counts with observe' do
-    callback = proc { 10 }
+    callback = proc { |obs| obs.observe(10) }
     observable_counter = meter.create_observable_counter('counter', unit: 'smidgen', description: 'a small amount of something', callback: callback)
     observable_counter.observe(timeout: 10, attributes: { 'foo' => 'bar' }) # observe will make another data points modification
 
@@ -73,11 +73,11 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableCounter do
   end
 
   it 'counts with observe after initialization' do
-    callback_first = proc { 10 }
+    callback_first = proc { |obs| obs.observe(10) }
     observable_counter = meter.create_observable_counter('counter', unit: 'smidgen', description: 'a small amount of something', callback: callback_first)
     _(observable_counter.instance_variable_get(:@callbacks).size).must_equal 1
 
-    callback_second = proc { 20 }
+    callback_second = proc { |obs| obs.observe(20) }
     observable_counter.register_callback(callback_second)
     _(observable_counter.instance_variable_get(:@callbacks).size).must_equal 2
 
@@ -93,7 +93,7 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableCounter do
   end
 
   it 'remove the callback after initialization result no metrics data' do
-    callback_first = proc { 10 }
+    callback_first = proc { |obs| obs.observe(10) }
     observable_counter = meter.create_observable_counter('counter', unit: 'smidgen', description: 'a small amount of something', callback: callback_first)
     _(observable_counter.instance_variable_get(:@callbacks).size).must_equal 1
 
@@ -111,8 +111,8 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableCounter do
   end
 
   it 'creation of instruments with more than one callabck' do
-    callback_first  = proc { 10 }
-    callback_second = proc { 20 }
+    callback_first  = proc { |obs| obs.observe(10) }
+    callback_second = proc { |obs| obs.observe(20) }
     observable_counter = meter.create_observable_counter('counter', unit: 'smidgen', description: 'a small amount of something', callback: [callback_first, callback_second])
     _(observable_counter.instance_variable_get(:@callbacks).size).must_equal 2
 

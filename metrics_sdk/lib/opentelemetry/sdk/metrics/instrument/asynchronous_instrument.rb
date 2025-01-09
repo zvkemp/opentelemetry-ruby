@@ -67,6 +67,7 @@ module OpenTelemetry
             end
           end
 
+          # FIXME: this seems to conflict with the "permanently registered" concept from `init_callback`.
           def unregister(callback)
             @callbacks.delete(callback)
           end

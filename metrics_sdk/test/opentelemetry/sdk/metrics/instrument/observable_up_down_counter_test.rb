@@ -17,7 +17,7 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableUpDownCounter do
   end
 
   it 'counts without observe' do
-    callback = proc { 10 }
+    callback = proc { |obs| obs.observe(10) }
     meter.create_observable_up_down_counter('updown_counter', unit: 'smidgen', description: 'a small amount of something', callback: callback)
 
     metric_exporter.pull
@@ -33,7 +33,7 @@ describe OpenTelemetry::SDK::Metrics::Instrument::ObservableUpDownCounter do
   end
 
   it 'counts with observe' do
-    callback = proc { 10 }
+    callback = proc { |obs| obs.observe(10) }
     up_down_counter = meter.create_observable_up_down_counter('updown_counter', unit: 'smidgen', description: 'a small amount of something', callback: callback)
     up_down_counter.observe(timeout: 10, attributes: { 'foo' => 'bar' })
 
